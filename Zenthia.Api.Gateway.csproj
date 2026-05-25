@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Zenthia.Api.Gateway</RootNamespace>
+    <AssemblyName>Zenthia.Api.Gateway</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Yarp.ReverseProxy"                    Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience"  Version="10.6.0" />
+  </ItemGroup>
+
+</Project>

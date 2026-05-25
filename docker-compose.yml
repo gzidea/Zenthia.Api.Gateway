@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # API Gateway
+  # ═══════════════════════════════════════════════════════════════════════════
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zenthia-api-gateway
+    ports:
+      - "5100:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:5000
+      - LOGGING_LEVEL_DEFAULT=${LOGGING_LEVEL_DEFAULT:-Information}
+      - LOGGING_LEVEL_ASPNETCORE=${LOGGING_LEVEL_ASPNETCORE:-Warning}
+      - LOGGING_LEVEL_YARP=${LOGGING_LEVEL_YARP:-Information}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      # Auth Route Configuration
+      - ReverseProxy__Routes__auth-route__ClusterId=${REVERSEPROXY_ROUTES_AUTH_CLUSTERID}
+      - ReverseProxy__Routes__auth-route__RateLimiterPolicy=${REVERSEPROXY_ROUTES_AUTH_RATELIMITER}
+      - ReverseProxy__Routes__auth-route__Match__Path=${REVERSEPROXY_ROUTES_AUTH_PATH}
+      # Auth Cluster Configuration
+      - ReverseProxy__Clusters__cluster-security__LoadBalancingPolicy=${REVERSEPROXY_CLUSTERS_AUTH_LOADBALANCING}
+      - ReverseProxy__Clusters__cluster-security__Destinations__primary__Address=${REVERSEPROXY_CLUSTERS_AUTH_DESTINATION_PRIMARY}
+      # Orders Route Configuration (Ejemplo adicional)
+      - ReverseProxy__Routes__orders-route__ClusterId=${REVERSEPROXY_ROUTES_ORDERS_CLUSTERID}
+      - ReverseProxy__Routes__orders-route__RateLimiterPolicy=${REVERSEPROXY_ROUTES_ORDERS_RATELIMITER}
+      - ReverseProxy__Routes__orders-route__Match__Path=${REVERSEPROXY_ROUTES_ORDERS_PATH}
+      # Orders Cluster Configuration (Ejemplo adicional)
+      - ReverseProxy__Clusters__cluster-orders__LoadBalancingPolicy=${REVERSEPROXY_CLUSTERS_ORDERS_LOADBALANCING}
+      - ReverseProxy__Clusters__cluster-orders__Destinations__primary__Address=${REVERSEPROXY_CLUSTERS_ORDERS_DESTINATION_PRIMARY}
+    restart: unless-stopped
+    networks:
+      - zenthia-network
+    depends_on:
+      - security
+networks:
+    zenthia-network:
+        name: zenthia-network
+        driver: bridge
+        attachable: true
