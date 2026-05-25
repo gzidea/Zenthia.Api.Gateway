@@ -1,19 +1,14 @@
 version: "3.8"
 
 services:
-  # ═══════════════════════════════════════════════════════════════════════════
   # API Gateway
-  # ═══════════════════════════════════════════════════════════════════════════
   api-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: zenthia-api-gateway
     ports:
       - "5100:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_URLS=http://+:5100
       - LOGGING_LEVEL_DEFAULT=${LOGGING_LEVEL_DEFAULT:-Information}
       - LOGGING_LEVEL_ASPNETCORE=${LOGGING_LEVEL_ASPNETCORE:-Warning}
       - LOGGING_LEVEL_YARP=${LOGGING_LEVEL_YARP:-Information}
