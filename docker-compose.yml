@@ -3,9 +3,10 @@ version: "3.8"
 services:
   # API Gateway
   api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: zenthia-api-gateway
-    ports:
-      - "5100:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:5100
@@ -27,6 +28,8 @@ services:
       # Orders Cluster Configuration (Ejemplo adicional)
       - ReverseProxy__Clusters__cluster-orders__LoadBalancingPolicy=${REVERSEPROXY_CLUSTERS_ORDERS_LOADBALANCING}
       - ReverseProxy__Clusters__cluster-orders__Destinations__primary__Address=${REVERSEPROXY_CLUSTERS_ORDERS_DESTINATION_PRIMARY}
+    ports:
+      - "5100:8080"
     restart: unless-stopped
     networks:
       - zenthia-network
