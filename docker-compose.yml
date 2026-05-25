@@ -35,8 +35,6 @@ services:
     restart: unless-stopped
     networks:
       - zenthia-network
-    depends_on:
-      - security
 networks:
     zenthia-network:
         name: zenthia-network
