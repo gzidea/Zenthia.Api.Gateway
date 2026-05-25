@@ -1,11 +1,6 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# Zenthia.Api.Gateway - Multi-stage Dockerfile
-# ═══════════════════════════════════════════════════════════════════════════
-
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
-
-WORKDIR /src
+WORKDIR /app
 
 # Copy proyecto files
 COPY Zenthia.Api.Gateway.csproj ./
