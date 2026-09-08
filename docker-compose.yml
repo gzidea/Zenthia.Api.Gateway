@@ -2,18 +2,14 @@ version: "3.8"
 
 services:
   # API Gateway
-  api-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: zenthia-api-gateway
-    ports:
-      - "5100:8080"
-    restart: unless-stopped
+  zenthia-gateway:
+    image: ghcr.io/gzidea/zenthia.api.gateway:latest
+    container_name: zenthia-gateway
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
     networks:
-      - zenthia-network
+      - external_zenthia
 networks:
-    zenthia-network:
-        name: zenthia-network
-        driver: bridge
-        attachable: true
+  external_zenthia:
+    external: true
