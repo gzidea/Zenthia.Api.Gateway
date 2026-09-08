@@ -6,6 +6,8 @@ services:
     image: ghcr.io/gzidea/zenthia.api.gateway:latest
     container_name: zenthia-gateway
     restart: always
+    ports:
+      - "5100:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     networks:
