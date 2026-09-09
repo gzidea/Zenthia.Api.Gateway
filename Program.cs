@@ -1,3 +1,5 @@
+using Yarp.ReverseProxy;
+using Yarp.ReverseProxy.Health;
 using Zenthia.Api.Gateway.Extensions;
 using Zenthia.Api.Gateway.Middleware;
 
@@ -27,6 +29,14 @@ builder.Services
 
 builder.Services.AddHealthChecks();
 
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
+builder.Services.Configure<ConsecutiveFailuresHealthPolicyOptions>(options =>
+{
+    options.DefaultThreshold = 3; // 3 fallas seguidas = destino down
+});
+
 // ┌─────────────────────────────────────────────────────────────────────────┐
 // │  Pipeline                                                                │
 // │                                                                          │
@@ -48,5 +58,27 @@ app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
 app.MapReverseProxy();
+
+app.MapGet("/gateway/health-status", (IProxyStateLookup proxyState) =>
+{
+    var result = new List<object>();
+
+    foreach (var cluster in proxyState.GetClusters())
+    {
+        foreach (var destination in cluster.Destinations.Values)
+        {
+            result.Add(new
+            {
+                Cluster = cluster.ClusterId,
+                Destination = destination.DestinationId,
+                Address = destination.Model.Config.Address,
+                Health = destination.Health.Active.ToString(),
+                Passive = destination.Health.Passive.ToString()
+            });
+        }
+    }
+
+    return Results.Ok(result);
+});
 
 app.Run();
