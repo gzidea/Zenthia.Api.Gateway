@@ -29,9 +29,6 @@ builder.Services
 
 builder.Services.AddHealthChecks();
 
-builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-
 builder.Services.Configure<ConsecutiveFailuresHealthPolicyOptions>(options =>
 {
     options.DefaultThreshold = 3; // 3 fallas seguidas = destino down
