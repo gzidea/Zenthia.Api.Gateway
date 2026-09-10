@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // │                                                                          │
 // │  El gateway NO valida JWT. Responsabilidades:                            │
 // │    · Enrutamiento (YARP)                                                 │
+// │    · CORS (único punto de política de origen para todos los clientes)   │
 // │    · Rate limiting por IP                                                │
 // │    · Resilience: retry, circuit breaker, timeout por cluster             │
 // │    · Correlation ID para trazabilidad                                    │
@@ -17,7 +18,20 @@ var builder = WebApplication.CreateBuilder(args);
 // │                                                                          │
 // │  Cada microservicio destino valida el token Bearer por su cuenta         │
 // │  y construye su propio ActorContext a partir de los claims.              │
+// │  Los microservicios NO deben configurar su propio CORS: el gateway es    │
+// │  el borde de la red y responde el preflight antes de llegar a YARP.      │
 // └─────────────────────────────────────────────────────────────────────────┘
+
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? new[] { "http://localhost:3000" };
+
+builder.Services.AddCors(opts =>
+    opts.AddDefaultPolicy(policy =>
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials()));
 
 builder.Services
     .AddZenthiaRateLimiting()
@@ -37,10 +51,14 @@ builder.Services.Configure<ConsecutiveFailuresHealthPolicyOptions>(options =>
 // ┌─────────────────────────────────────────────────────────────────────────┐
 // │  Pipeline                                                                │
 // │                                                                          │
-// │  Error → CorrelationId → RateLimit → YARP                               │
+// │  Error → CorrelationId → Cors → RateLimit → YARP                        │
+// │                                                                          │
+// │  UseCors() va ANTES de MapReverseProxy: el preflight OPTIONS se          │
+// │  resuelve acá mismo y nunca llega a reenviarse al microservicio.         │
 // │                                                                          │
 // │  Sin UseAuthentication / UseAuthorization                                │
-// │  El header Authorization se reenvía intacto al microservicio destino    │
+// │  El header Authorization (y la cookie, si la hay) se reenvía intacto     │
+// │  al microservicio destino.                                               │
 // └─────────────────────────────────────────────────────────────────────────┘
 
 var app = builder.Build();
@@ -51,6 +69,7 @@ app.UseMiddleware<CorrelationIdMiddleware>();
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
+app.UseCors();
 app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
